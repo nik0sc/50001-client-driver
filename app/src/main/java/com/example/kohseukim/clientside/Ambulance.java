@@ -28,6 +28,14 @@ public class Ambulance {
         this.currentLocation = currentLocation;
     }
 
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
+    }
+
     public List<GeoPoint> getRoute() {
         return route;
     }

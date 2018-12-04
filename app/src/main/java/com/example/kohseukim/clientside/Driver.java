@@ -2,20 +2,21 @@ package com.example.kohseukim.clientside;
 
 import com.google.firebase.firestore.*;
 
+// Remember to write any changes to data objects back to Firestore
 public class Driver {
     private String alertLevel;
-    private String alertResponded;
+    private boolean alertResponded;
     private DocumentReference inRadiusOf;
     private GeoPoint location;
 
     public Driver() {
         this.alertLevel = null;
-        this.alertResponded = null;
+        this.alertResponded = false;
         this.inRadiusOf = null;
         this.location = null;
     }
 
-    public Driver(String alertLevel, String alertResponded, DocumentReference inRadiusOf, GeoPoint location) {
+    public Driver(String alertLevel, boolean alertResponded, DocumentReference inRadiusOf, GeoPoint location) {
         this.alertLevel = alertLevel;
         this.alertResponded = alertResponded;
         this.inRadiusOf = inRadiusOf;
@@ -30,11 +31,11 @@ public class Driver {
         this.alertLevel = alertLevel;
     }
 
-    public String getAlertResponded() {
+    public boolean isAlertResponded() {
         return alertResponded;
     }
 
-    public void setAlertResponded(String alertResponded) {
+    public void setAlertResponded(boolean alertResponded) {
         this.alertResponded = alertResponded;
     }
 
