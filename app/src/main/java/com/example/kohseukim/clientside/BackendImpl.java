@@ -2,64 +2,103 @@ package com.example.kohseukim.clientside;
 
 import android.content.Context;
 import android.util.Log;
+import android.widget.Toast;
 
 import static android.location.Location.distanceBetween;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.*;
-import com.google.android.gms.location.LocationServices;
+
+import java.util.HashMap;
+import java.util.PriorityQueue;
+import java.util.Queue;
 
 import javax.annotation.Nullable;
 
 public class BackendImpl implements BackEnd {
     public static final String TAG = "BackendImpl";
 
+    // Distance cutoff in metres
     public static final int level1DistanceCutoff = 800;
     public static final int level2DistanceCutoff = 1200;
 
+    // Minimum number of seconds to wait before querying again (Rate limiting)
+    public static final int minInterval = 5;
+
+    public static final int locationInterval = 5;
+
     // Frontend to display icons and plot routes etc
     private FrontEnd frontEnd;
+
     // Don't use activity context without wrapping in a weak reference
     private Context appContext;
+
     // Cloud Firestore instance
     private FirebaseFirestore db;
+
     // Cloud Firestore listener (unregister when stopping)
     private ListenerRegistration registration = null;
+
     // Ambulance being alerted on
     private Ambulance activeAmbulance = null;
+
     // Reference to ambulance in db
     private DocumentReference fbActiveAmbulance = null;
+
+    // Ambulance cache
+    private HashMap<String, Ambulance> ambulanceCache;
+
     // Current driver
     private Driver driver;
+
     // Reference to driver in db
     private DocumentReference fbDriver = null;
+
+    // Ambulance sorting class
+    private AmbulanceSorter ambulanceSorter = null;
+
+    // Fused location provider
+    private FusedLocationProviderClient locationClient;
+
+    // Location callback to receive location updates
+    private LocationCallback locationCallback;
 
     // Pull these constants from R.string later
     private final String fbVehicles;
     private final String fbAmbulances;
     private final String fbAmbulanceIsActive;
 
-    /*
-     * Create a new backend class
-     * Do not pass in the activity context!!
+    /**
+     * Create a new backend object
+     * @param frontEnd The frontend object
+     * @param appContext The application context (Do not pass in the activity context!!)
      */
     public BackendImpl(FrontEnd frontEnd, Context appContext) {
         this.frontEnd = frontEnd;
         this.appContext = appContext;
         db = FirebaseFirestore.getInstance();
         driver = new Driver();
+        ambulanceCache = new HashMap<>();
+        locationClient = LocationServices.getFusedLocationProviderClient(appContext);
 
         fbVehicles = appContext.getString(R.string.fb_vehicles);
         fbAmbulances = appContext.getString(R.string.fb_ambulances);
         fbAmbulanceIsActive = appContext.getString(R.string.fb_ambulance_isActive);
 
-        if (level1DistanceCutoff > level2DistanceCutoff) {
-            throw new AssertionError("Level 1 is more than level 2 distance");
-        }
+        // Wrong place for this assertion
+//        if (level1DistanceCutoff > level2DistanceCutoff) {
+//            throw new AssertionError("Level 1 is more than level 2 distance");
+//        }
     }
 
-    /*
-     * Publish the client and begin monitoring the /ambulances document
+    /**
+     * Publish the client and begin monitoring the /ambulances collection
+     * @param id Id for the client
      */
     @Override
     public void start(String id) {
@@ -73,6 +112,7 @@ public class BackendImpl implements BackEnd {
             }
         );
 
+        // Ambulance listener
         Query q = db.collection(fbAmbulances).whereEqualTo(fbAmbulanceIsActive,true);
         registration = q.addSnapshotListener(new EventListener<QuerySnapshot>() {
             // This runs when the fb_ambulances document changes
@@ -104,24 +144,57 @@ public class BackendImpl implements BackEnd {
             }
         });
 
-
-
-
+        startLocationUpdates();
     }
 
-    // On ambulance update, iterate through all the updated ones and find out which one is the closest
+    private void startLocationUpdates() {
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+            }
+        };
+
+        try {
+            // Begin location update
+            locationClient.requestLocationUpdates(
+                    LocationRequest.create()
+                            .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                            .setInterval(locationInterval),
+                    locationCallback,
+                    null
+            );
+        } catch (SecurityException e) {
+            Toast.makeText(appContext, "Not allowed to get location", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "startLocationUpdates: SecurityException!", e);
+        }
+    }
+
+    private void stopLocationUpdates() {
+        locationClient.removeLocationUpdates(locationCallback);
+    }
+
+    // Update cache and signal recalculation
     private void onAmbulanceUpdate(QueryDocumentSnapshot doc) {
+        String id = doc.getId();
+        Ambulance updated = doc.toObject(Ambulance.class);
 
+        ambulanceCache.put(id, updated);
+
+        // TODO recalculate
     }
 
-    // On ambulance update, iterate through
+    // Delete and signal recalculation
     private void onAmbulanceRemove(QueryDocumentSnapshot doc) {
+        String id = doc.getId();
+        ambulanceCache.remove(id);
 
+        // TODO recalculate
     }
 
     //
 
-    private FrontEnd.AlertType calculateAlertType(Coordinates car, Coordinates amb) {
+    public static FrontEnd.AlertType calculateAlertType(GeoPoint car, GeoPoint amb) {
         float[] distance = {0};
         /*
         https://developer.android.com/reference/android/location/Location.html
@@ -134,7 +207,8 @@ public class BackendImpl implements BackEnd {
         initial bearing is stored in results[1]. If results has length 3 or greater, the final
         bearing is stored in results[2].
          */
-        distanceBetween(car.getLat(), car.getLon(), amb.getLat(), amb.getLon(), distance);
+        distanceBetween(car.getLatitude(), car.getLongitude(),
+                amb.getLatitude(), amb.getLongitude(), distance);
 
         if (distance[0] < level1DistanceCutoff) {
             return FrontEnd.AlertType.LEVEL_1;
