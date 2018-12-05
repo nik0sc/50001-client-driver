@@ -1,6 +1,7 @@
 package com.example.kohseukim.clientside;
 
 import android.content.Context;
+import android.location.Location;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -14,6 +15,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.PriorityQueue;
 import java.util.Queue;
@@ -30,6 +32,7 @@ public class BackendImpl implements BackEnd {
     // Minimum number of seconds to wait before querying again (Rate limiting)
     public static final int minInterval = 5;
 
+    // Seconds between location updates
     public static final int locationInterval = 5;
 
     // Frontend to display icons and plot routes etc
@@ -51,7 +54,7 @@ public class BackendImpl implements BackEnd {
     private DocumentReference fbActiveAmbulance = null;
 
     // Ambulance cache
-    private HashMap<String, Ambulance> ambulanceCache;
+    private final HashMap<String, Ambulance> ambulanceCache;
 
     // Current driver
     private Driver driver;
@@ -60,13 +63,17 @@ public class BackendImpl implements BackEnd {
     private DocumentReference fbDriver = null;
 
     // Ambulance sorting class
-    private AmbulanceSorter ambulanceSorter = null;
+    // declared final to prevent changing the reference and defeating the synchronization
+    private final AmbulanceSorter ambulanceSorter;
 
     // Fused location provider
     private FusedLocationProviderClient locationClient;
 
     // Location callback to receive location updates
-    private LocationCallback locationCallback;
+    private LocationCallback locationCallback = null;
+
+    // Most recent location
+    private Location mostRecentLocation = null;
 
     // Pull these constants from R.string later
     private final String fbVehicles;
@@ -81,10 +88,12 @@ public class BackendImpl implements BackEnd {
     public BackendImpl(FrontEnd frontEnd, Context appContext) {
         this.frontEnd = frontEnd;
         this.appContext = appContext;
+
         db = FirebaseFirestore.getInstance();
         driver = new Driver();
         ambulanceCache = new HashMap<>();
         locationClient = LocationServices.getFusedLocationProviderClient(appContext);
+        ambulanceSorter = new AmbulanceSorter();
 
         fbVehicles = appContext.getString(R.string.fb_vehicles);
         fbAmbulances = appContext.getString(R.string.fb_ambulances);
@@ -111,6 +120,7 @@ public class BackendImpl implements BackEnd {
                 }
             }
         );
+        Log.d(TAG, "start: Subscribed");
 
         // Ambulance listener
         Query q = db.collection(fbAmbulances).whereEqualTo(fbAmbulanceIsActive,true);
@@ -145,13 +155,16 @@ public class BackendImpl implements BackEnd {
         });
 
         startLocationUpdates();
+
+        Log.i(TAG, "start: Started backend");
     }
 
     private void startLocationUpdates() {
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
-                super.onLocationResult(locationResult);
+                mostRecentLocation = locationResult.getLastLocation();
+                // TODO signal recalculation
             }
         };
 
@@ -168,10 +181,21 @@ public class BackendImpl implements BackEnd {
             Toast.makeText(appContext, "Not allowed to get location", Toast.LENGTH_SHORT).show();
             Log.e(TAG, "startLocationUpdates: SecurityException!", e);
         }
+
+        Log.d(TAG, "startLocationUpdates: Registered location callback");
     }
 
     private void stopLocationUpdates() {
         locationClient.removeLocationUpdates(locationCallback);
+        Log.d(TAG, "stopLocationUpdates: Unregistered location callback");
+    }
+
+    private GeoPoint mostRecentLocationAsGeoPoint() {
+        if (mostRecentLocation == null) {
+            return null;
+        }
+
+        return new GeoPoint(mostRecentLocation.getLatitude(), mostRecentLocation.getLongitude());
     }
 
     // Update cache and signal recalculation
@@ -180,6 +204,9 @@ public class BackendImpl implements BackEnd {
         Ambulance updated = doc.toObject(Ambulance.class);
 
         ambulanceCache.put(id, updated);
+
+        ambulanceSorter.updateAmbulances(ambulanceCache.values());
+        ambulanceSorter.updateLocation(mostRecentLocationAsGeoPoint());
 
         // TODO recalculate
     }
@@ -192,7 +219,10 @@ public class BackendImpl implements BackEnd {
         // TODO recalculate
     }
 
-    //
+    private void recalculate(){
+        // Obtain the latest sorted ambulance
+
+    }
 
     public static FrontEnd.AlertType calculateAlertType(GeoPoint car, GeoPoint amb) {
         float[] distance = {0};
@@ -225,15 +255,20 @@ public class BackendImpl implements BackEnd {
             driver.setAlertResponded(true);
             fbDriver.set(driver);
         }
+        Log.d(TAG, "acknowledgeAlert: Acknowledged alert");
     }
 
     @Override
     public void stop() {
+        stopLocationUpdates();
+
         if (fbDriver != null) {
             fbDriver.delete();
         }
         if (registration != null) {
             registration.remove();
         }
+
+        Log.i(TAG, "stop: Stopped backend");
     }
 }
