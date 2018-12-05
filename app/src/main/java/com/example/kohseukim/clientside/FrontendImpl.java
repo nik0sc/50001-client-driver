@@ -27,15 +27,12 @@ import static android.location.Location.distanceBetween;
 
 public class FrontendImpl implements FrontEnd {
 
-    private final String fbVehicles = "vehicles";
-    private final String fbAmbulances = "ambulances";
-    private final String fbAmbulanceIsActive = "isActive";
     private final String Tag = "frontend";
     private ArrayList<Marker> markerlist = new ArrayList<Marker>();
 
-    private GoogleMap mMap;
     private FirebaseFirestore db;
-    private Context mContext = getApplicationContext();
+    private Context mContext = App.getContext();
+    private GoogleMap mMap = MapsActivity.mMap;
 
     public void showAlert(AlertType alert){
         db = FirebaseFirestore.getInstance();
@@ -148,7 +145,7 @@ public class FrontendImpl implements FrontEnd {
         }
         PolylineOptions lineopts = new PolylineOptions();
         for(GeoPoint p : routeline){
-            LatLng l = new LatLng((p.getLatitude(),p.getLongitude()));
+            LatLng l = new LatLng(p.getLatitude(),p.getLongitude());
             lineopts = lineopts.add(l).width(3).color(Color.BLACK);
         }
         Polyline line = mMap.addPolyline(lineopts);
@@ -164,7 +161,7 @@ public class FrontendImpl implements FrontEnd {
         }
         PolylineOptions lineopts = new PolylineOptions();
         for(GeoPoint p : routeline){
-            LatLng l = new LatLng((p.getLatitude(),p.getLongitude()));
+            LatLng l = new LatLng(p.getLatitude(),p.getLongitude());
             lineopts = lineopts.add(l).width(3).color(Color.BLACK);
         }
         Polyline line = mMap.addPolyline(lineopts);
