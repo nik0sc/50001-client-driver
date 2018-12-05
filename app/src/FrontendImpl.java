@@ -10,8 +10,6 @@ import java.util.List;
 import java.util.ArrayList;
 
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.model.Circle;
-import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -21,9 +19,6 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.*;
 import com.google.android.gms.maps.model.Polyline;
 
-import static android.location.Location.distanceBetween;
-
-//TODO create a map reference :O
 
 public class FrontendImpl implements FrontEnd {
 
