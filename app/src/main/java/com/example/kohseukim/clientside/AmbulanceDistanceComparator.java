@@ -5,18 +5,19 @@ import static android.location.Location.distanceBetween;
 
 import java.util.Comparator;
 
-/*
+/**
  * A Comparator that can compare ambulances by their distance from the current point.
- * You must create a new Comparator and pass it into the Queue every time the location updates.
+ * You must create a new Comparator every time the location updates.
  * This is by design
  */
 public class AmbulanceDistanceComparator implements Comparator<Ambulance> {
-    // No public accessors - otherwise the correct ordering could change while the queue uses the
-    // old ordering. Simpler to just create a new queue every time
+    // No public accessors - otherwise the correct ordering could change while the sort or queue
+    // uses the old ordering. Simpler to just create a new comparator every time
     private GeoPoint currentLocation;
 
-    /*
-     * Create a new AmbulanceDistanceComparator
+    /**
+     * Create a new AmbulanceDistanceComparator.
+     * @param currentLocation the current location to use when comparing distances
      */
     public AmbulanceDistanceComparator(GeoPoint currentLocation){
         this.currentLocation = currentLocation;
