@@ -5,8 +5,6 @@ import android.location.Location;
 import android.util.Log;
 import android.widget.Toast;
 
-import static android.location.Location.distanceBetween;
-
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -17,23 +15,28 @@ import com.google.firebase.firestore.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
 import javax.annotation.Nullable;
 
+import static android.location.Location.distanceBetween;
+
 public class BackendImpl implements BackEnd {
-    public static final String TAG = "BackendImpl";
+    private static final String TAG = "BackendImpl";
 
     // Distance cutoff in metres
-    public static final int level1DistanceCutoff = 800;
-    public static final int level2DistanceCutoff = 1200;
+    // friends only
+    private static final int level1DistanceCutoff = 800;
+    private static final int level2DistanceCutoff = 1200;
 
-    // Minimum number of seconds to wait before querying again (Rate limiting)
-    public static final int minInterval = 5;
+    // Minimum number of seconds to wait before recalculating
+    private static final int minInterval = 5;
 
     // Seconds between location updates
-    public static final int locationInterval = 5;
+    private static final int locationInterval = 5;
 
     // Frontend to display icons and plot routes etc
     private FrontEnd frontEnd;
@@ -47,8 +50,8 @@ public class BackendImpl implements BackEnd {
     // Cloud Firestore listener (unregister when stopping)
     private ListenerRegistration registration = null;
 
-    // Ambulance being alerted on
-    private Ambulance activeAmbulance = null;
+    // Ambulance being alerted on (contains firestore id and ambulance object)
+    private Map.Entry<String, Ambulance> activeAmbulance = null;
 
     // Reference to ambulance in db
     private DocumentReference fbActiveAmbulance = null;
@@ -74,6 +77,9 @@ public class BackendImpl implements BackEnd {
 
     // Most recent location
     private Location mostRecentLocation = null;
+
+    // Last recalculation
+    private long lastRecalculation = 0;
 
     // Pull these constants from R.string later
     private final String fbVehicles;
@@ -159,12 +165,18 @@ public class BackendImpl implements BackEnd {
         Log.i(TAG, "start: Started backend");
     }
 
+    /**
+     * Update mostRecentLocation field with the best location when its available
+     */
     private void startLocationUpdates() {
+        // Attach callback to fusedlocationproviderclient
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 mostRecentLocation = locationResult.getLastLocation();
+                Log.d(TAG, "onLocationResult: Got location and updated mRL field");
                 // TODO signal recalculation
+                recalculateAndDisplay();
             }
         };
 
@@ -185,45 +197,33 @@ public class BackendImpl implements BackEnd {
         Log.d(TAG, "startLocationUpdates: Registered location callback");
     }
 
+    /**
+     * Unregister location callback from startLocationUpdates()
+     */
     private void stopLocationUpdates() {
         locationClient.removeLocationUpdates(locationCallback);
         Log.d(TAG, "stopLocationUpdates: Unregistered location callback");
     }
 
+    /**
+     * Convert most recent location to Firebase GeoPoint
+     * @return GeoPoint
+     */
     private GeoPoint mostRecentLocationAsGeoPoint() {
         if (mostRecentLocation == null) {
+            Log.e(TAG, "mostRecentLocationAsGeoPoint: Location is not updated yet");
             return null;
         }
 
         return new GeoPoint(mostRecentLocation.getLatitude(), mostRecentLocation.getLongitude());
     }
 
-    // Update cache and signal recalculation
-    private void onAmbulanceUpdate(QueryDocumentSnapshot doc) {
-        String id = doc.getId();
-        Ambulance updated = doc.toObject(Ambulance.class);
-
-        ambulanceCache.put(id, updated);
-
-        ambulanceSorter.updateAmbulances(ambulanceCache.values());
-        ambulanceSorter.updateLocation(mostRecentLocationAsGeoPoint());
-
-        // TODO recalculate
-    }
-
-    // Delete and signal recalculation
-    private void onAmbulanceRemove(QueryDocumentSnapshot doc) {
-        String id = doc.getId();
-        ambulanceCache.remove(id);
-
-        // TODO recalculate
-    }
-
-    private void recalculate(){
-        // Obtain the latest sorted ambulance
-
-    }
-
+    /**
+     * Given the location of a car and ambulance, calculate the alert level that would result
+     * @param car Coordinates of car
+     * @param amb Coordinates of ambulance
+     * @return the alert type or null
+     */
     public static FrontEnd.AlertType calculateAlertType(GeoPoint car, GeoPoint amb) {
         float[] distance = {0};
         /*
@@ -248,6 +248,91 @@ public class BackendImpl implements BackEnd {
             return null;
         }
     }
+
+    /**
+     * Update the ambulance cache and ambulance sorter object, then request a recalculation
+     * @param doc QueryDocumentSnapshot from Firebase
+     */
+    private void onAmbulanceUpdate(QueryDocumentSnapshot doc) {
+        String id = doc.getId();
+        Ambulance updated = doc.toObject(Ambulance.class);
+
+        ambulanceCache.put(id, updated);
+
+        // Update ambulanceSorter and cause it to invalidate the sorted ambulance list
+        ambulanceSorter.updateAmbulances(ambulanceCache);
+        ambulanceSorter.updateLocation(mostRecentLocationAsGeoPoint());
+
+        // Safe to call ambulanceSorter.getAmbulancesSorted() now
+
+        // TODO recalculate
+        recalculateAndDisplay();
+    }
+
+    /**
+     * Remove an ambulance from the cache and request recalculation
+      * @param doc QueryDocumentSnapshot from Firebase
+     */
+    private void onAmbulanceRemove(QueryDocumentSnapshot doc) {
+        String id = doc.getId();
+        ambulanceCache.remove(id);
+
+        ambulanceSorter.updateAmbulances(ambulanceCache);
+        ambulanceSorter.updateLocation(mostRecentLocationAsGeoPoint());
+
+        // TODO recalculate
+        recalculateAndDisplay();
+    }
+
+    private void recalculateAndDisplay(){
+        long currentTime = System.currentTimeMillis();
+
+        if (currentTime - lastRecalculation < minInterval * 1000) {
+            Log.d(TAG, "recalculateAndDisplay: Interval hasn't elapsed yet");
+            return;
+        }
+
+        Map.Entry<String, Ambulance> nearestAmbulanceEntry = ambulanceSorter.getNearestAmbulance();
+        Ambulance nearestAmbulance = nearestAmbulanceEntry.getValue();
+        String nearestAmbulanceId = nearestAmbulanceEntry.getKey();
+
+        // Is this the nearest ambulance from last time?
+        boolean sameAmbulance = nearestAmbulanceId.equals(activeAmbulance.getKey());
+
+        if (!sameAmbulance) {
+            // Update active ambulance
+            activeAmbulance = nearestAmbulanceEntry;
+            Log.d(TAG, "recalculateAndDisplay: activeAmbulance changed");
+        } else {
+            Log.d(TAG, "recalculateAndDisplay: no change to ambulance");
+        }
+
+        FrontEnd.AlertType alertType = calculateAlertType(
+                mostRecentLocationAsGeoPoint(), nearestAmbulance.getCurrentLocation());
+        Log.d(TAG, "recalculateAndDisplay: alertType: " + alertType);
+
+        if (alertType == null) {
+            // Do nothing
+            return;
+        } else if (sameAmbulance) {
+            frontEnd.showAlert(alertType);
+            frontEnd.updateAmbulance(nearestAmbulance.getCurrentLocation(), 0);
+            frontEnd.updateRoute(nearestAmbulance.getRoute());
+        } else {
+            frontEnd.dropAmbulance();
+            frontEnd.dropRoute();
+
+            frontEnd.showAlert(alertType);
+            frontEnd.showAmbulance(nearestAmbulance.getCurrentLocation(),0);
+            frontEnd.showRoute(nearestAmbulance.getRoute());
+        }
+
+        // Update the last recalculation
+        long completeTime = System.currentTimeMillis();
+        lastRecalculation = completeTime;
+        Log.d(TAG, "recalculateAndDisplay: millis taken: " + (completeTime - currentTime));
+    }
+
 
     @Override
     public void acknowledgeAlert() {
