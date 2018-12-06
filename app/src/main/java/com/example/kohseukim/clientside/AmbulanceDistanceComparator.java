@@ -4,13 +4,14 @@ import com.google.firebase.firestore.GeoPoint;
 import static android.location.Location.distanceBetween;
 
 import java.util.Comparator;
+import java.util.Map;
 
 /**
- * A Comparator that can compare ambulances by their distance from the current point.
+ * A Comparator that can compare ambulance cache entries by their distance from the current point.
  * You must create a new Comparator every time the location updates.
  * This is by design
  */
-public class AmbulanceDistanceComparator implements Comparator<Ambulance> {
+public class AmbulanceDistanceComparator implements Comparator<Map.Entry<String,Ambulance>> {
     // No public accessors - otherwise the correct ordering could change while the sort or queue
     // uses the old ordering. Simpler to just create a new comparator every time
     private GeoPoint currentLocation;
@@ -24,18 +25,19 @@ public class AmbulanceDistanceComparator implements Comparator<Ambulance> {
     }
 
     @Override
-    public int compare(Ambulance o1, Ambulance o2) {
+    public int compare(Map.Entry<String, Ambulance> o1, Map.Entry<String, Ambulance> o2) {
         float[] o1DistArray = {0};
         float[] o2DistArray = {0};
 
+        GeoPoint o1geo = o1.getValue().getCurrentLocation();
+        GeoPoint o2geo = o2.getValue().getCurrentLocation();
+
         // Obtain distance to ambulance 1 and 2
         distanceBetween(currentLocation.getLatitude(), currentLocation.getLongitude(),
-                o1.getCurrentLocation().getLatitude(), o1.getCurrentLocation().getLongitude(),
-                o1DistArray);
+                o1geo.getLatitude(), o1geo.getLongitude(), o1DistArray);
 
         distanceBetween(currentLocation.getLatitude(), currentLocation.getLongitude(),
-                o2.getCurrentLocation().getLatitude(), o2.getCurrentLocation().getLongitude(),
-                o2DistArray);
+                o2geo.getLatitude(), o2geo.getLongitude(), o2DistArray);
 
         // Compare distances directly
         return Float.compare(o1DistArray[0], o2DistArray[0]);
