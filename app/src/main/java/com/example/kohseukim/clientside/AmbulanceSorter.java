@@ -5,14 +5,14 @@ import com.google.firebase.firestore.GeoPoint;
 import java.util.*;
 
 /**
- * Sorts ambulances by distance from the current point.
+ * Sorts an ambulance cache by distance from the current point.
  * This class encapsulates both the latest ambulance list and the latest location (in the
  * AmbulanceDistanceComparator), which are obtained from external sources updated asynchronously
  * and possibly even from separate threads (Firestore snapshots and FusedLocationProviderClient).
  */
 public class AmbulanceSorter {
-    private Collection<Ambulance> ambulances;
-    private List<Ambulance> ambulancesSorted = null;
+    private Map<String, Ambulance> ambulances;
+    private List<Map.Entry<String,Ambulance>> ambulancesSorted = null;
     private AmbulanceDistanceComparator ambulanceDistanceComparator;
 
     /**
@@ -25,10 +25,10 @@ public class AmbulanceSorter {
 
     /**
      * Create a new ambulance sorter
-     * @param ambulances Collection of Ambulance objects to sort
+     * @param ambulances Map of String ids to Ambulance objects to sort
      * @param currentLocation Current location of device
      */
-    public AmbulanceSorter(Collection<Ambulance> ambulances, GeoPoint currentLocation) {
+    public AmbulanceSorter(Map<String, Ambulance> ambulances, GeoPoint currentLocation) {
         this.ambulances = ambulances;
         this.ambulanceDistanceComparator = new AmbulanceDistanceComparator(currentLocation);
     }
@@ -52,12 +52,12 @@ public class AmbulanceSorter {
      */
 
     /**
-     * Return a sorted list of ambulances. Tries to use the cached location
-     * This returns a shallow copy of the unsorted ambulances list passed in by updateAmbulances()
+     * Return a sorted list of id-ambulance pairs. Tries to use the cached location
+     * This returns a shallow copy of the unsorted ambulance cache passed in by updateAmbulances()
      * or the constructor. Don't modify the ambulance objects in the sorted list
-     * @return Sorted list of ambulances
+     * @return Sorted list of id-ambulances pairs
      */
-    public synchronized List<Ambulance> getAmbulancesSorted() {
+    public synchronized List<Map.Entry<String, Ambulance>> getAmbulancesSorted() {
         if (ambulancesSorted == null) {
             // Shallow copy is ok, as long as ambulance objects aren't modified when the sorted list is
             // returned to the caller
@@ -69,11 +69,19 @@ public class AmbulanceSorter {
                 throw new NullPointerException("ambulanceDistanceComparator is null");
             }
 
-            ambulancesSorted = new ArrayList<>(ambulances);
+            ambulancesSorted = new ArrayList<Map.Entry<String, Ambulance>>(ambulances.entrySet());
             Collections.sort(ambulancesSorted, ambulanceDistanceComparator);
         }
 
         return ambulancesSorted;
+    }
+
+    /**
+     * Just get the nearest ambulance
+     * @return Nearest id-ambulance pair
+     */
+    public Map.Entry<String, Ambulance> getNearestAmbulance() {
+        return getAmbulancesSorted().get(0);
     }
 
     /**
@@ -90,7 +98,7 @@ public class AmbulanceSorter {
      * Update the collection of ambulances, invalidating the sorted ambulance list.
      * @param ambulances New ambulances
      */
-    public synchronized void updateAmbulances(Collection<Ambulance> ambulances) {
+    public synchronized void updateAmbulances(Map<String, Ambulance> ambulances) {
         // Don't actually want to throw away the current location
         ambulancesSorted = null;
         this.ambulances = ambulances;
