@@ -123,10 +123,11 @@ public class BackendImpl implements BackEnd {
                 @Override
                 public void onSuccess(DocumentReference documentReference) {
                     fbDriver = documentReference;
+                    Log.d(TAG, "start: Driver published");
+
                 }
             }
         );
-        Log.d(TAG, "start: Subscribed");
 
         // Ambulance listener
         Query q = db.collection(fbAmbulances).whereEqualTo(fbAmbulanceIsActive,true);
@@ -175,6 +176,18 @@ public class BackendImpl implements BackEnd {
             public void onLocationResult(LocationResult locationResult) {
                 mostRecentLocation = locationResult.getLastLocation();
                 Log.d(TAG, "onLocationResult: Got location and updated mRL field");
+
+                driver.setLocation(mostRecentLocationAsGeoPoint());
+                if (fbDriver != null) {
+                    fbDriver.set(driver).addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            Log.d(TAG, "onSuccess: Successfully updated driver location");
+                        }
+                    });
+                } else {
+                    Log.w(TAG, "onLocationResult: Can't update driver location on firestore because fbDriver is null");
+                }
                 // TODO signal recalculation
                 recalculateAndDisplay();
             }
@@ -293,6 +306,13 @@ public class BackendImpl implements BackEnd {
         }
 
         Map.Entry<String, Ambulance> nearestAmbulanceEntry = ambulanceSorter.getNearestAmbulance();
+
+        if (nearestAmbulanceEntry == null) {
+            Log.d(TAG, "recalculateAndDisplay: No ambulance nearby");
+            lastRecalculation = System.currentTimeMillis();
+            return;
+        }
+
         Ambulance nearestAmbulance = nearestAmbulanceEntry.getValue();
         String nearestAmbulanceId = nearestAmbulanceEntry.getKey();
 

@@ -1,5 +1,7 @@
 package com.example.kohseukim.clientside;
 
+import android.util.Log;
+
 import com.google.firebase.firestore.GeoPoint;
 
 import java.util.*;
@@ -11,6 +13,8 @@ import java.util.*;
  * and possibly even from separate threads (Firestore snapshots and FusedLocationProviderClient).
  */
 public class AmbulanceSorter {
+    public static final String TAG = "AmbulanceSorter";
+
     private Map<String, Ambulance> ambulances;
     private List<Map.Entry<String,Ambulance>> ambulancesSorted = null;
     private AmbulanceDistanceComparator ambulanceDistanceComparator;
@@ -62,11 +66,13 @@ public class AmbulanceSorter {
             // Shallow copy is ok, as long as ambulance objects aren't modified when the sorted list is
             // returned to the caller
             if (ambulances == null) {
-                throw new NullPointerException("ambulances is null");
+                Log.w(TAG, "getAmbulancesSorted: ambulances is null");
+                return new ArrayList<>();
             }
 
             if (ambulanceDistanceComparator == null) {
-                throw new NullPointerException("ambulanceDistanceComparator is null");
+                Log.w(TAG, "getAmbulancesSorted: ambulanceDistanceComparator is null");
+                return new ArrayList<>();
             }
 
             ambulancesSorted = new ArrayList<Map.Entry<String, Ambulance>>(ambulances.entrySet());
@@ -80,8 +86,14 @@ public class AmbulanceSorter {
      * Just get the nearest ambulance
      * @return Nearest id-ambulance pair
      */
-    public Map.Entry<String, Ambulance> getNearestAmbulance() {
-        return getAmbulancesSorted().get(0);
+    public synchronized Map.Entry<String, Ambulance> getNearestAmbulance() {
+        List<Map.Entry<String, Ambulance>> sorted = getAmbulancesSorted();
+        if (sorted.size() > 0) {
+            return sorted.get(0);
+        } else {
+            Log.w(TAG, "getNearestAmbulance: No nearest ambulance");
+            return null;
+        }
     }
 
     /**
