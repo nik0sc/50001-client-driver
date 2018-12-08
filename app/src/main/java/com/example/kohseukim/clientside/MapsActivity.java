@@ -60,6 +60,8 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import static com.example.kohseukim.clientside.FrontEnd.AlertType.LEVEL_1;
+import static com.example.kohseukim.clientside.FrontEnd.AlertType.LEVEL_2;
 import static com.google.android.gms.maps.model.JointType.DEFAULT;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
@@ -262,6 +264,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 // Start downloading json data from Google Directions API
                                 FetchUrl.execute(url);
 
+                                if(distance[0] <800)
+                                frontEnd.showAlert(LEVEL_1);
+
+                                else
+                                    frontEnd.showAlert(LEVEL_2);
+
 
 //                                        allpolylines.get(1).remove();
 
@@ -288,17 +296,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         private String id;
         private String email;
         private GeoPoint Location;
-        private GeoPoint destination;
+        private GeoPoint Destination;
         private Array route;
 
         private Ambulance() {}
 
-        private Ambulance(String id, String email, GeoPoint Location, GeoPoint destination ,Array route){
+        private Ambulance(String id, String email, GeoPoint Location, GeoPoint Destination ,Array route){
             this.id = id;
             this.email = email;
             this.Location = Location;
             this.route = route;
-            this.destination = destination;
+            this.Destination = Destination;
 
         }
 
@@ -335,11 +343,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
         public GeoPoint getDestination() {
-            return destination;
+            return Destination;
         }
 
         public void setDestination(GeoPoint destination) {
-            this.destination = destination;
+            this.Destination = destination;
         }
     }
 
