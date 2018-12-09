@@ -188,6 +188,10 @@ public class BackendImpl implements BackEnd {
                 } else {
                     Log.w(TAG, "onLocationResult: Can't update driver location on firestore because fbDriver is null");
                 }
+
+                // Tell sorter that we have a better location
+                ambulanceSorter.updateLocation(mostRecentLocationAsGeoPoint());
+
                 // TODO signal recalculation
                 recalculateAndDisplay();
             }
@@ -298,6 +302,7 @@ public class BackendImpl implements BackEnd {
     }
 
     private void recalculateAndDisplay(){
+        Log.d(TAG, "recalculateAndDisplay: Enter recalculation");
         long currentTime = System.currentTimeMillis();
 
         if (currentTime - lastRecalculation < minInterval * 1000) {
@@ -317,7 +322,8 @@ public class BackendImpl implements BackEnd {
         String nearestAmbulanceId = nearestAmbulanceEntry.getKey();
 
         // Is this the nearest ambulance from last time?
-        boolean sameAmbulance = nearestAmbulanceId.equals(activeAmbulance.getKey());
+        boolean sameAmbulance = (activeAmbulance != null
+                && nearestAmbulanceId.equals(activeAmbulance.getKey()));
 
         if (!sameAmbulance) {
             // Update active ambulance
