@@ -97,40 +97,40 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Sound alert for Level 1
 
         // Reference to level 1 button
-        Button map_btn_one = findViewById(R.id.map_btn_one);
+        //Button map_btn_one = findViewById(R.id.map_btn_one);
 
         final MediaPlayer levelonealertsound = MediaPlayer.create(this, R.raw.levelonealertsound);
 
 
         // when the button is clicked, we go to the level 1 alert
-        map_btn_one.setOnClickListener(new View.OnClickListener() {
-
-
-            @Override
-            public void onClick(View v) {
-                Intent i = new Intent(getApplicationContext(), LevelOneActivity.class);
-                startActivity(i);
-                levelonealertsound.start();
-
-            }
-        });
-
-
-        // Reference to level 2 button
-        Button map_btn_two = findViewById(R.id.map_btn_two);
+//        map_btn_one.setOnClickListener(new View.OnClickListener() {
+//
+//
+//            @Override
+//            public void onClick(View v) {
+//                Intent i = new Intent(getApplicationContext(), LevelOneActivity.class);
+//                startActivity(i);
+//                levelonealertsound.start();
+//
+//            }
+//        });
+//
+//
+//        // Reference to level 2 button
+//        Button map_btn_two = findViewById(R.id.map_btn_two);
 
         //final MediaPlayer levelTwoAlertSound = MediaPlayer.create(this, R.raw.leveltwoalert);
 
 
         // when the button is clicked, we ego to the level 2 alert
-        map_btn_two.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent i = new Intent(MapsActivity.this, LevelTwoActivity.class);
-                startActivity(i);
-                overridePendingTransition(0, 0);
-            }
-        });
+//        map_btn_two.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                Intent i = new Intent(MapsActivity.this, LevelTwoActivity.class);
+//                startActivity(i);
+//                overridePendingTransition(0, 0);
+//            }
+//        });
 
         //frontend = new FrontendImpl();
 
