@@ -32,6 +32,11 @@ public class Ambulance {
         return isActive;
     }
 
+    // This method is here for firestore's resolution of fields and accessors
+    public boolean getIsActive() {
+        return isActive();
+    }
+
     public void setActive(boolean active) {
         isActive = active;
     }
