@@ -27,8 +27,7 @@ import static android.location.Location.distanceBetween;
 
 public class FrontendImpl implements FrontEnd {
 
-
-
+    private AlertType state = null;
     public static final String TAG = "FrontendImpl";
     private ArrayList<Marker> markerlist = new ArrayList<Marker>();
     private ArrayList<Polyline> polylinelist = new ArrayList<Polyline>();
@@ -48,13 +47,19 @@ public class FrontendImpl implements FrontEnd {
 
         switch (alert) {
             case LEVEL_1:
-                Log.d(TAG, "showAlert: Level 1 alert");
-                intent = new Intent(mContext, LevelOneActivity.class);
-                break;
+                if(state != AlertType.LEVEL_1){
+                    Log.d(TAG, "showAlert: Level 1 alert");
+                    intent = new Intent(mContext, LevelOneActivity.class);
+                    state = AlertType.LEVEL_1;
+                    break;
+                }
             case LEVEL_2:
-                Log.d(TAG, "showAlert: Level 2 alert");
-                intent = new Intent(mContext, LevelTwoActivity.class);
-                break;
+                if(state != AlertType.LEVEL_2){
+                    Log.d(TAG, "showAlert: Level 2 alert");
+                    intent = new Intent(mContext, LevelTwoActivity.class);
+                    state = AlertType.LEVEL_2;
+                    break;
+                }
             default:
                 Log.e(TAG, "showAlert: Unsupported alert type");
                 return;
