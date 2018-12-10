@@ -134,8 +134,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         //frontend = new FrontendImpl();
 
-        backend = new BackendImpl(new FrontendImpl(mMap), getApplicationContext());
-        backend.start("hi");
 
         db = FirebaseFirestore.getInstance();
 
@@ -206,6 +204,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
             mMap.setMyLocationEnabled(true);
         }
+
+        backend = new BackendImpl(new FrontendImpl(mMap), getApplicationContext());
+        backend.start("hi");
+
 
     }
 

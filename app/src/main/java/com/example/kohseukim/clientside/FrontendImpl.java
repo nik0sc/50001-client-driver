@@ -23,8 +23,6 @@ import com.google.android.gms.maps.model.Polyline;
 
 import static android.location.Location.distanceBetween;
 
-//TODO create a map reference :O
-
 public class FrontendImpl implements FrontEnd {
 
     private AlertType state = null;
@@ -77,11 +75,8 @@ public class FrontendImpl implements FrontEnd {
     public void showAmbulance(GeoPoint location, double heading){
         LatLng l = new LatLng(location.getLatitude(),location.getLongitude());
         MarkerOptions mo = new MarkerOptions().position(l).title("Ambulance");
-        try{
         Marker m = mMap.addMarker(mo);
-        markerlist.add(m);}catch (NullPointerException e){
-
-        }
+        markerlist.add(m);
     }
 
 
@@ -91,9 +86,8 @@ public class FrontendImpl implements FrontEnd {
         }
         LatLng l = new LatLng(location.getLatitude(),location.getLongitude());
         MarkerOptions mo = new MarkerOptions().position(l).title("Ambulance");
-        try{
         Marker m = mMap.addMarker(mo);
-        markerlist.add(m);}catch(NullPointerException e){}
+        markerlist.add(m);
     }
 
 
@@ -117,9 +111,8 @@ public class FrontendImpl implements FrontEnd {
             LatLng l = new LatLng(g.getLatitude(),g.getLongitude());
             po.add(l);
         }
-        try{
         Polyline p = mMap.addPolyline(po);
-        polylinelist.add(p);}catch(NullPointerException e){}
+        polylinelist.add(p);
     }
 
     public void updateRoute(List<GeoPoint> route){
@@ -131,9 +124,10 @@ public class FrontendImpl implements FrontEnd {
             LatLng l = new LatLng(g.getLatitude(),g.getLongitude());
             po.add(l);
         }
-        try{
+
+
         Polyline p = mMap.addPolyline(po);
-        polylinelist.add(p);}catch(NullPointerException e){}
+        polylinelist.add(p);
     }
 
     public void dropRoute(){

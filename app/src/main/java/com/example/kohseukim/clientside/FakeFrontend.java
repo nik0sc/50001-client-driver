@@ -11,7 +11,7 @@ public class FakeFrontend implements FrontEnd {
     private AlertType currentAlert = null;
     
     public FakeFrontend(){
-        
+        Log.e(TAG, "Don't ever use this class unless you mean to");
     }
     
     @Override
