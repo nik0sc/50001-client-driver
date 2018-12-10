@@ -124,6 +124,8 @@ public class FrontendImpl implements FrontEnd {
             LatLng l = new LatLng(g.getLatitude(),g.getLongitude());
             po.add(l);
         }
+
+
         Polyline p = mMap.addPolyline(po);
         polylinelist.add(p);
     }
