@@ -4,12 +4,14 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 
 public class LevelOneActivity extends Activity {
+    public static final String TAG = "LevelOneActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,9 +35,16 @@ public class LevelOneActivity extends Activity {
         mainLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.d(TAG, "onClick: Enter onClick handler");
+
+                if (App.backend == null) {
+                    Log.e(TAG, "onClick: App.backend is null, has it been initialized?");
+                } else {
+                    App.backend.acknowledgeAlert();
+                }
+
                 Intent i = new Intent(LevelOneActivity.this, MapsActivity.class);
                 startActivity(i);
-
 
             }
         });

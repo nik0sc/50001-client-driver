@@ -46,6 +46,13 @@ public class LevelTwoActivity extends Activity {
         levelTwo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.d(TAG, "onClick: Enter onClick handler");
+
+                if (App.backend == null) {
+                    Log.e(TAG, "onClick: App.backend is null, has it been initialized?");
+                } else {
+                    App.backend.acknowledgeAlert();
+                }
                 Intent i = new Intent(LevelTwoActivity.this, LevelTwoBottomActivity.class);
                 finish();
                 startActivity(i);
