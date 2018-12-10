@@ -10,7 +10,7 @@ public interface FrontEnd {
     }
 
     void showAlert(AlertType type);
-    void dropAlert(AlertType type);
+    void dropAlert();
 
     void showAmbulance(GeoPoint location, double heading);
     void updateAmbulance(GeoPoint location, double heading);
