@@ -118,8 +118,7 @@ public class BackendImpl implements BackEnd {
                 @Override
                 public void onSuccess(DocumentReference documentReference) {
                     fbDriver = documentReference;
-                    Log.d(TAG, "start: Driver published");
-
+                    Log.d(TAG, "start: Driver published, id: " + fbDriver.getId());
                 }
             }
         );
@@ -368,8 +367,9 @@ public class BackendImpl implements BackEnd {
         if (fbDriver != null) {
             driver.setAlertResponded(true);
             fbDriver.set(driver);
+            Log.d(TAG, "acknowledgeAlert: Acknowledged alert");
+
         }
-        Log.d(TAG, "acknowledgeAlert: Acknowledged alert");
     }
 
     @Override
