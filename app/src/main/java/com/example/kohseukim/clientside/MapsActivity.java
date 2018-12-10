@@ -66,7 +66,7 @@ import static com.google.android.gms.maps.model.JointType.DEFAULT;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
-    static public GoogleMap mMap;
+    private GoogleMap mMap;
     private static final String TAG = "Main";
     FusedLocationProviderClient mFusedLocationClient;
     SupportMapFragment mapFrag;
@@ -134,8 +134,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         //frontend = new FrontendImpl();
 
-        backend = new BackendImpl(new FrontendImpl(), getApplicationContext());
+        backend = new BackendImpl(new FrontendImpl(mMap), getApplicationContext());
         backend.start("hi");
+
+        db = FirebaseFirestore.getInstance();
 
         ////// NOTE: Buttons are used to trigger alert popup is temporary, since we do not have radius data yet //////
 

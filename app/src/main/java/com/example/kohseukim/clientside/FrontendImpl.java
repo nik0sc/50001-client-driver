@@ -27,25 +27,40 @@ import static android.location.Location.distanceBetween;
 
 public class FrontendImpl implements FrontEnd {
 
-    public FrontendImpl(){
 
-    }
 
+    public static final String TAG = "FrontendImpl";
     private ArrayList<Marker> markerlist = new ArrayList<Marker>();
     private ArrayList<Polyline> polylinelist = new ArrayList<Polyline>();
 
     private Context mContext = MyApplication.getAppContext();
-    private GoogleMap mMap = MapsActivity.mMap;
+    private GoogleMap mMap;
+
+    public FrontendImpl(GoogleMap map){
+
+        mMap = map;
+
+    }
 
     public void showAlert(AlertType alert){
-        if(alert == AlertType.LEVEL_2) {
-            Intent intent = new Intent(mContext, LevelTwoActivity.class);
-            mContext.startActivity(intent);
+
+        Intent intent;
+
+        switch (alert) {
+            case LEVEL_1:
+                Log.d(TAG, "showAlert: Level 1 alert");
+                intent = new Intent(mContext, LevelOneActivity.class);
+                break;
+            case LEVEL_2:
+                Log.d(TAG, "showAlert: Level 2 alert");
+                intent = new Intent(mContext, LevelTwoActivity.class);
+                break;
+            default:
+                Log.e(TAG, "showAlert: Unsupported alert type");
+                return;
         }
-        else if(alert == AlertType.LEVEL_1){
-            Intent intent = new Intent(mContext, LevelOneActivity.class);
-            mContext.startActivity(intent);
-        }
+
+        mContext.startActivity(intent);
     }
 
     public void dropAlert(){
@@ -57,8 +72,11 @@ public class FrontendImpl implements FrontEnd {
     public void showAmbulance(GeoPoint location, double heading){
         LatLng l = new LatLng(location.getLatitude(),location.getLongitude());
         MarkerOptions mo = new MarkerOptions().position(l).title("Ambulance");
+        try{
         Marker m = mMap.addMarker(mo);
-        markerlist.add(m);
+        markerlist.add(m);}catch (NullPointerException e){
+
+        }
     }
 
 
@@ -68,8 +86,9 @@ public class FrontendImpl implements FrontEnd {
         }
         LatLng l = new LatLng(location.getLatitude(),location.getLongitude());
         MarkerOptions mo = new MarkerOptions().position(l).title("Ambulance");
+        try{
         Marker m = mMap.addMarker(mo);
-        markerlist.add(m);
+        markerlist.add(m);}catch(NullPointerException e){}
     }
 
 
@@ -93,8 +112,9 @@ public class FrontendImpl implements FrontEnd {
             LatLng l = new LatLng(g.getLatitude(),g.getLongitude());
             po.add(l);
         }
+        try{
         Polyline p = mMap.addPolyline(po);
-        polylinelist.add(p);
+        polylinelist.add(p);}catch(NullPointerException e){}
     }
 
     public void updateRoute(List<GeoPoint> route){
@@ -106,8 +126,9 @@ public class FrontendImpl implements FrontEnd {
             LatLng l = new LatLng(g.getLatitude(),g.getLongitude());
             po.add(l);
         }
+        try{
         Polyline p = mMap.addPolyline(po);
-        polylinelist.add(p);
+        polylinelist.add(p);}catch(NullPointerException e){}
     }
 
     public void dropRoute(){
