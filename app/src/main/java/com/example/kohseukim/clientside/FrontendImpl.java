@@ -24,14 +24,14 @@ import com.google.android.gms.maps.model.Polyline;
 import static android.location.Location.distanceBetween;
 
 public class FrontendImpl implements FrontEnd {
-
-    private AlertType state = null;
     public static final String TAG = "FrontendImpl";
     private ArrayList<Marker> markerlist = new ArrayList<Marker>();
     private ArrayList<Polyline> polylinelist = new ArrayList<Polyline>();
 
     private Context mContext = MyApplication.getAppContext();
     private GoogleMap mMap;
+
+    private AlertType currentAlert = null;
 
     public FrontendImpl(GoogleMap map){
 
@@ -40,29 +40,30 @@ public class FrontendImpl implements FrontEnd {
     }
 
     public void showAlert(AlertType alert){
+        Intent intent = null;
 
-        Intent intent;
+        if (currentAlert == alert) {
+            Log.d(TAG, "showAlert: Same alert as last time, not restarting activity");
+            return;
+        }
 
         switch (alert) {
             case LEVEL_1:
-                if(state != AlertType.LEVEL_1){
-                    Log.d(TAG, "showAlert: Level 1 alert");
-                    intent = new Intent(mContext, LevelOneActivity.class);
-                    state = AlertType.LEVEL_1;
-                    break;
-                }
+                Log.d(TAG, "showAlert: Level 1 alert");
+                intent = new Intent(mContext, LevelOneActivity.class);
+                break;
+
             case LEVEL_2:
-                if(state != AlertType.LEVEL_2){
-                    Log.d(TAG, "showAlert: Level 2 alert");
-                    intent = new Intent(mContext, LevelTwoActivity.class);
-                    state = AlertType.LEVEL_2;
-                    break;
-                }
+                Log.d(TAG, "showAlert: Level 2 alert");
+                intent = new Intent(mContext, LevelTwoActivity.class);
+                break;
+
             default:
                 Log.e(TAG, "showAlert: Unsupported alert type");
                 return;
         }
 
+        currentAlert = alert;
         mContext.startActivity(intent);
     }
 
