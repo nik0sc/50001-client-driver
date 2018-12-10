@@ -28,10 +28,10 @@ public class BackendImpl implements BackEnd {
     private static final int level2DistanceCutoff = 800;
 
     // Minimum number of seconds to wait before recalculating
-    private static final int minInterval = 5;
+    private static final int minInterval = 2;
 
     // Seconds between location updates
-    private static final int locationInterval = 5;
+    private static final int locationInterval = 2;
 
     // Frontend to display icons and plot routes etc
     private FrontEnd frontEnd;
