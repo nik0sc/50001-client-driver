@@ -32,14 +32,14 @@ public class LevelTwoBottomActivity extends Activity {
 
         final FrameLayout mainLayout = findViewById(R.id.level_two_bottom_layout);
 
-        mainLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent i = new Intent(LevelTwoBottomActivity.this, MapsActivity.class);
-                startActivity(i);
-
-            }
-        });
+//        mainLayout.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                Intent i = new Intent(LevelTwoBottomActivity.this, MapsActivity.class);
+//                startActivity(i);
+//
+//            }
+//        });
     }
 }
 

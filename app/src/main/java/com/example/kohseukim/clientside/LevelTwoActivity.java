@@ -53,7 +53,7 @@ public class LevelTwoActivity extends Activity {
                 } else {
                     App.backend.acknowledgeAlert();
                 }
-                Intent i = new Intent(LevelTwoActivity.this, LevelTwoBottomActivity.class);
+                Intent i = new Intent(LevelTwoActivity.this, MapsActivity.class);
                 finish();
                 startActivity(i);
                 AudioPlay.stopAudio();
