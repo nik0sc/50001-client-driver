@@ -10,6 +10,7 @@ import java.util.Map;
  * A Comparator that can compare ambulance cache entries by their distance from the current point.
  * You must create a new Comparator every time the location updates.
  * This is by design
+ * Comparator doesn't check for null pointers: NPE is your problem
  */
 public class AmbulanceDistanceComparator implements Comparator<Map.Entry<String,Ambulance>> {
     // No public accessors - otherwise the correct ordering could change while the sort or queue
@@ -22,6 +23,10 @@ public class AmbulanceDistanceComparator implements Comparator<Map.Entry<String,
      */
     public AmbulanceDistanceComparator(GeoPoint currentLocation){
         this.currentLocation = currentLocation;
+    }
+
+    public GeoPoint getCurrentLocation() {
+        return currentLocation;
     }
 
     @Override

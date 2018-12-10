@@ -66,12 +66,18 @@ public class AmbulanceSorter {
             // Shallow copy is ok, as long as ambulance objects aren't modified when the sorted list is
             // returned to the caller
             if (ambulances == null) {
-                Log.w(TAG, "getAmbulancesSorted: ambulances is null");
+                Log.w(TAG, "getAmbulancesSorted: ambulances is null (called updateAmbulances() yet?)");
                 return new ArrayList<>();
             }
 
             if (ambulanceDistanceComparator == null) {
-                Log.w(TAG, "getAmbulancesSorted: ambulanceDistanceComparator is null");
+                Log.w(TAG, "getAmbulancesSorted: ambulanceDistanceComparator is null (called updateLocation() yet?)");
+                return new ArrayList<>();
+            }
+
+            if (ambulanceDistanceComparator.getCurrentLocation() == null) {
+                Log.w(TAG, "getAmbulancesSorted: ambulanceDistanceComparator.currentLocation" +
+                        " is null (should not happen)");
                 return new ArrayList<>();
             }
 
@@ -101,6 +107,11 @@ public class AmbulanceSorter {
      * @param currentLocation Current location
      */
     public synchronized void updateLocation(GeoPoint currentLocation) {
+        if (currentLocation == null) {
+            Log.w(TAG, "updateLocation: passed in null for currentLocation (not updating)");
+            return;
+        }
+
         // updating the current location will make the current sorted ambulance list stale
         ambulancesSorted = null;
         ambulanceDistanceComparator = new AmbulanceDistanceComparator(currentLocation);
@@ -111,6 +122,15 @@ public class AmbulanceSorter {
      * @param ambulances New ambulances
      */
     public synchronized void updateAmbulances(Map<String, Ambulance> ambulances) {
+        if (ambulances == null) {
+            Log.w(TAG, "updateAmbulances: passed in null for ambulances (not updating)");
+            return;
+        }
+
+        if (ambulances.size() == 0) {
+            Log.i(TAG, "updateAmbulances: No ambulances (updating)");
+        }
+
         // Don't actually want to throw away the current location
         ambulancesSorted = null;
         this.ambulances = ambulances;
