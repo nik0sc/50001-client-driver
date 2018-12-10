@@ -2,7 +2,7 @@
     <string name="app_name">ClientSide</string>
     <string name="title_activity_maps">Map</string>
     <string name="title_activity_level_one">LevelOneActivity</string>
-    <string name="fb_ambulances">AmbulanceSide</string>
+    <string name="fb_ambulances">ambulances</string>
     <string name="fb_vehicles">vehicles</string>
     <string name="fb_ambulance_isActive">isActive</string>
     <string name="title_activity_backend_test">BackendTestActivity</string>
