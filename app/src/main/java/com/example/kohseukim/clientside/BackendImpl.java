@@ -29,8 +29,8 @@ public class BackendImpl implements BackEnd {
 
     // Distance cutoff in metres
     // friends only
-    private static final int level1DistanceCutoff = 800;
-    private static final int level2DistanceCutoff = 1200;
+    private static final int level1DistanceCutoff = 1200;
+    private static final int level2DistanceCutoff = 800;
 
     // Minimum number of seconds to wait before recalculating
     private static final int minInterval = 5;
@@ -257,10 +257,10 @@ public class BackendImpl implements BackEnd {
         distanceBetween(car.getLatitude(), car.getLongitude(),
                 amb.getLatitude(), amb.getLongitude(), distance);
 
-        if (distance[0] < level1DistanceCutoff) {
-            return FrontEnd.AlertType.LEVEL_1;
-        } else if (distance[0] < level2DistanceCutoff) {
+        if (distance[0] < level2DistanceCutoff) {
             return FrontEnd.AlertType.LEVEL_2;
+        } else if (distance[0] < level1DistanceCutoff) {
+            return FrontEnd.AlertType.LEVEL_1;
         } else {
             return null;
         }
