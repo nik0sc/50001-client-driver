@@ -79,9 +79,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FirebaseFirestore db;
     List<String> activeAmbu = new ArrayList<>();
 
-    //private FrontEnd frontEnd;
-    private BackEnd backend;
-    private FrontendImpl frontend;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -205,8 +202,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             mMap.setMyLocationEnabled(true);
         }
 
-        backend = new BackendImpl(new FrontendImpl(mMap), getApplicationContext());
-        backend.start("hi");
+        // Must be global for leveloneactivity to acknowledge alert
+        App.backend = new BackendImpl(new FrontendImpl(mMap), getApplicationContext());
+        App.backend.start("hi");
 
 
     }
@@ -439,11 +437,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     @Override
+    protected void onStop() {
+        App.backend.stop();
+        Log.i(TAG, "onStop");
+        super.onStop();
+    }
+
+    @Override
     protected void onDestroy() {
         Log.i(TAG, "onDestroy");
         super.onDestroy();
 
-        backend.stop();
     }
 
 
