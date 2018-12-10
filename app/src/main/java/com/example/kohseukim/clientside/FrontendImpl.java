@@ -27,91 +27,47 @@ import static android.location.Location.distanceBetween;
 
 public class FrontendImpl implements FrontEnd {
 
-    private final String Tag = "frontend";
     private ArrayList<Marker> markerlist = new ArrayList<Marker>();
+    private ArrayList<Polyline> polylinelist = new ArrayList<Polyline>();
 
-    private FirebaseFirestore db;
     private Context mContext = App.getContext();
     private GoogleMap mMap = MapsActivity.mMap;
 
     public void showAlert(AlertType alert){
-        db = FirebaseFirestore.getInstance();
-        if(alert == null) {
-            Intent intent = new Intent(mContext, LevelOneActivity.class);
-            mContext.startActivity(intent);
-        }
-        else if(alert == AlertType.LEVEL_1){
+        if(alert == AlertType.LEVEL_2) {
             Intent intent = new Intent(mContext, LevelTwoActivity.class);
             mContext.startActivity(intent);
         }
-    }
-
-    public void dropAlert(AlertType alert){
-        //TODO nulls alert
-        db = FirebaseFirestore.getInstance();
-        if(alert == AlertType.LEVEL_2){
-            Intent intent = new Intent(mContext,LevelOneActivity.class);
-            mContext.startActivity(intent);
-            }
         else if(alert == AlertType.LEVEL_1){
-            Intent intent = new Intent(mContext, MapsActivity.class);
+            Intent intent = new Intent(mContext, LevelOneActivity.class);
             mContext.startActivity(intent);
         }
+    }
+
+    public void dropAlert(){
+        //TODO nulls alert
+        Intent intent = new Intent(mContext, MapsActivity.class);
+        mContext.startActivity(intent);
+    }
+
+    public void showAmbulance(GeoPoint location, double heading){
+        LatLng l = new LatLng(location.getLatitude(),location.getLongitude());
+        MarkerOptions mo = new MarkerOptions().position(l).title("Ambulance");
+        Marker m = mMap.addMarker(mo);
+        markerlist.add(m);
+    }
+
+
+    public void updateAmbulance(GeoPoint location, double heading){
+        for(Marker m : markerlist){
+            m.remove();
         }
-
-    public void showAmbulance(){
-        db = FirebaseFirestore.getInstance();
-        //TODO pull from firebase
-        db.collection("ambulances").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                if(task.isSuccessful()){
-                    for(QueryDocumentSnapshot document : task.getResult()){
-                        Log.d(Tag,document.getId()+ " => " + document.getData());
-                        String str = document.getData().toString();
-                        String[] point_t = str.split(",");
-                        double x = Double.parseDouble(point_t[0].trim());
-                        double y = Double.parseDouble(point_t[1].trim());
-                        GeoPoint point = new GeoPoint(x,y);
-                        MarkerOptions markeropts = new MarkerOptions();
-                        markeropts.position(new LatLng(point.getLatitude(),point.getLongitude()));
-                        Marker marker = mMap.addMarker(markeropts);
-                        markerlist.add(marker);
-                    }
-                }else{
-                    Log.w(Tag,"Error getting documents",task.getException());
-                }
-            }
-        });
-
+        LatLng l = new LatLng(location.getLatitude(),location.getLongitude());
+        MarkerOptions mo = new MarkerOptions().position(l).title("Ambulance");
+        Marker m = mMap.addMarker(mo);
+        markerlist.add(m);
     }
 
-    public void updateAmbulance(){
-        db = FirebaseFirestore.getInstance();
-        //TODO pull from firebase
-        db.collection("ambulances").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                if(task.isSuccessful()){
-                    for(QueryDocumentSnapshot document : task.getResult()){
-                        Log.d(Tag,document.getId()+ " => " + document.getData());
-                        String str = document.getData().toString();
-                        String[] point_t = str.split(",");
-                        double x = Double.parseDouble(point_t[0].trim());
-                        double y = Double.parseDouble(point_t[1].trim());
-                        GeoPoint point = new GeoPoint(x,y);
-                        MarkerOptions markeropts = new MarkerOptions();
-                        markeropts.position(new LatLng(point.getLatitude(),point.getLongitude()));
-                        Marker marker = mMap.addMarker(markeropts);
-                        markerlist.add(marker);
-                    }
-                }else{
-                    Log.w(Tag,"Error getting documents",task.getException());
-                }
-            }
-        });
-
-    }
 
     public void dropAmbulance(){
         for(Marker m : markerlist){
@@ -119,57 +75,41 @@ public class FrontendImpl implements FrontEnd {
         }
     }
 
-//    public void showRadius(Coordinates car,AlertType alert){
-//        //TODO called on radius
-//        //need to pull map from MapsActivity or get a map reference to it
-//        GoogleMap map;
-//        GeoPoint center;
-//        center = new GeoPoint(car.getLat(), car.getLon());
-//        if(alert == AlertType.LEVEL_2 ){
-//            Circle circle = map.addCircle(new CircleOptions().center(center).radius(1200).strokeColor(Color.BLUE).fillColor(Color.BLUE));
-//        }
-//        else if(alert == AlertType.LEVEL_1){
-//            Circle circle = map.addCircle(new CircleOptions().center(center).radius(1200).strokeColor(Color.RED).fillColor(Color.RED));
-//        }
-//    }
-//
-//    public void dropRadius(){
-//        //TODO called on drop ambulance
-//    }
-
-    public void showRoute(List<Coordinates> route){
-        ArrayList<GeoPoint> routeline = new ArrayList<GeoPoint>();
-        for(Coordinates c : route){//pre processing
-            GeoPoint add = new GeoPoint(c.getLat(),c.getLon());
-            routeline.add(add);
-        }
-        PolylineOptions lineopts = new PolylineOptions();
-        for(GeoPoint p : routeline){
-            LatLng l = new LatLng(p.getLatitude(),p.getLongitude());
-            lineopts = lineopts.add(l).width(3).color(Color.BLACK);
-        }
-        Polyline line = mMap.addPolyline(lineopts);
+    public void showRadius(double radius){
+        //does nothing
     }
 
-    public void updateRoute(List<Coordinates> route){
-        //TODO override route, do a coordinate comparison?
-        mMap.clear();
-        ArrayList<GeoPoint> routeline = new ArrayList<GeoPoint>();
-        for(Coordinates c : route){//pre processing
-            GeoPoint add = new GeoPoint(c.getLat(),c.getLon());
-            routeline.add(add);
+    public void dropRadius(){
+        //does nothing
+    }
+
+    public void showRoute(List<GeoPoint> route){
+        PolylineOptions po = new PolylineOptions();
+        for(GeoPoint g :route){
+            LatLng l = new LatLng(g.getLatitude(),g.getLongitude());
+            po.add(l);
         }
-        PolylineOptions lineopts = new PolylineOptions();
-        for(GeoPoint p : routeline){
-            LatLng l = new LatLng(p.getLatitude(),p.getLongitude());
-            lineopts = lineopts.add(l).width(3).color(Color.BLACK);
+        Polyline p = mMap.addPolyline(po);
+        polylinelist.add(p);
+    }
+
+    public void updateRoute(List<GeoPoint> route){
+        for(Polyline p : polylinelist){
+            p.remove();
         }
-        Polyline line = mMap.addPolyline(lineopts);
+        PolylineOptions po = new PolylineOptions();
+        for(GeoPoint g :route){
+            LatLng l = new LatLng(g.getLatitude(),g.getLongitude());
+            po.add(l);
+        }
+        Polyline p = mMap.addPolyline(po);
+        polylinelist.add(p);
     }
 
     public void dropRoute(){
-        //TODO set a route state to 0? also remove the route from being shown
-        mMap.clear();
+        for(Polyline p : polylinelist){
+            p.remove();
+        }
     }
 
 }
