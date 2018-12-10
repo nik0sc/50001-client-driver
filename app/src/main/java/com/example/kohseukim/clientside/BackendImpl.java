@@ -322,6 +322,9 @@ public class BackendImpl implements BackEnd {
         if (!sameAmbulance) {
             // Update active ambulance
             activeAmbulance = nearestAmbulanceEntry;
+            fbActiveAmbulance = db.collection(fbAmbulances).document(activeAmbulance.getKey());
+            // This is a new ambulance so we're going to show a new alert
+            driver.setAlertResponded(false);
             Log.d(TAG, "recalculateAndDisplay: activeAmbulance changed");
         } else {
             Log.d(TAG, "recalculateAndDisplay: no change to ambulance");
@@ -346,6 +349,12 @@ public class BackendImpl implements BackEnd {
             frontEnd.showAlert(alertType);
             frontEnd.updateAmbulance(nearestAmbulance.getCurrentLocation(), 0);
             frontEnd.updateRoute(nearestAmbulance.getRoute());
+
+            // Update firestore with details of current ambulance
+            driver.setAlertLevel(alertType.toString());
+            driver.setInRadiusOf(fbActiveAmbulance);
+
+            fbDriver.set(driver);
         } else {
             frontEnd.dropAmbulance();
             frontEnd.dropRoute();
@@ -353,6 +362,14 @@ public class BackendImpl implements BackEnd {
             frontEnd.showAlert(alertType);
             frontEnd.showAmbulance(nearestAmbulance.getCurrentLocation(),0);
             frontEnd.showRoute(nearestAmbulance.getRoute());
+
+
+            driver.setAlertLevel(alertType.toString());
+            driver.setInRadiusOf(fbActiveAmbulance);
+            driver.setAlertResponded(false);
+
+            fbDriver.set(driver);
+
         }
 
         // Update the last recalculation
