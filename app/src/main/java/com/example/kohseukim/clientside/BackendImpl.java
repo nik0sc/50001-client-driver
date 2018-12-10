@@ -13,12 +13,8 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.*;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Queue;
 
 import javax.annotation.Nullable;
 
@@ -28,7 +24,6 @@ public class BackendImpl implements BackEnd {
     private static final String TAG = "BackendImpl";
 
     // Distance cutoff in metres
-    // friends only
     private static final int level1DistanceCutoff = 1200;
     private static final int level2DistanceCutoff = 800;
 
@@ -202,7 +197,7 @@ public class BackendImpl implements BackEnd {
             locationClient.requestLocationUpdates(
                     LocationRequest.create()
                             .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                            .setInterval(locationInterval),
+                            .setInterval(locationInterval * 1000),
                     locationCallback,
                     null
             );
@@ -333,8 +328,16 @@ public class BackendImpl implements BackEnd {
             Log.d(TAG, "recalculateAndDisplay: no change to ambulance");
         }
 
-        FrontEnd.AlertType alertType = calculateAlertType(
-                mostRecentLocationAsGeoPoint(), nearestAmbulance.getCurrentLocation());
+        // Possible NPE at mostRecentLocation
+        GeoPoint mrl = mostRecentLocationAsGeoPoint();
+
+        if (mrl == null){
+            Log.d(TAG, "recalculateAndDisplay: most recent location is not ready yet, " +
+                    "if this persists there is probably a location bug");
+            return;
+        }
+
+        FrontEnd.AlertType alertType = calculateAlertType(mrl, nearestAmbulance.getCurrentLocation());
         Log.d(TAG, "recalculateAndDisplay: alertType: " + alertType);
 
         if (alertType == null) {
