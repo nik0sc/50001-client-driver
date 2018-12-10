@@ -79,7 +79,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FirebaseFirestore db;
     List<String> activeAmbu = new ArrayList<>();
 
-    private FrontEnd frontEnd;
+    //private FrontEnd frontEnd;
+    private BackEnd backend;
+    private FrontendImpl frontend;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -129,6 +131,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 overridePendingTransition(0, 0);
             }
         });
+
+        //frontend = new FrontendImpl();
+
+        backend = new BackendImpl(new FrontendImpl(), getApplicationContext());
+        backend.start("hi");
 
         ////// NOTE: Buttons are used to trigger alert popup is temporary, since we do not have radius data yet //////
 
@@ -228,128 +235,128 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16.0f));
             }
 
-            db.collection("AmbulanceSide").addSnapshotListener(new EventListener<QuerySnapshot>() {
-                @Override
-                public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
-                    //List<String> activeAmbu = new ArrayList<>();
-                    for (QueryDocumentSnapshot doc: queryDocumentSnapshots){
-                        List<String> activeAmbu = new ArrayList<>();
-                        if (doc.get("Route") != null){
-                            activeAmbu.add(doc.getId());
-                        }
-                    }
-                }
-            });
-
-            for(final String a: activeAmbu){
-                db.collection("AmbulanceSide").document(a).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                    @Override
-                    public void onSuccess(DocumentSnapshot documentSnapshot) {
-                        Ambulance ambulance = documentSnapshot.toObject(Ambulance.class);
-
-                        float[] distance = new float[1];
-                        Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
-                                ambulance.getLocation().getLatitude()/1E6, ambulance.getLocation().getLatitude()/1E6,distance);
-
-
-
-                        if(distance[0] < 1200){
-                            LatLng origin = new LatLng(ambulance.getLocation().getLatitude()/1E6, ambulance.getLocation().getLongitude()/1E6);
-                            try{
-                                LatLng dest = new LatLng(ambulance.getDestination().getLatitude()/1E6, ambulance.getDestination().getLongitude()/1E6);
-                                String url = getUrl(origin, dest);
-                                Log.d("onMapClick", url.toString());
-                                FetchUrl FetchUrl = new FetchUrl();
-
-                                // Start downloading json data from Google Directions API
-                                FetchUrl.execute(url);
-
-                                if(distance[0] <800)
-                                frontEnd.showAlert(LEVEL_1);
-
-                                else
-                                    frontEnd.showAlert(LEVEL_2);
-
-
-//                                        allpolylines.get(1).remove();
-
-
-                            }catch (IndexOutOfBoundsException e){
-
-                            }
-
-
-                        }
-
-
-
-
-                    }
-                });
-            }
+//            db.collection("AmbulanceSide").addSnapshotListener(new EventListener<QuerySnapshot>() {
+//                @Override
+//                public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+//                    //List<String> activeAmbu = new ArrayList<>();
+//                    for (QueryDocumentSnapshot doc: queryDocumentSnapshots){
+//                        List<String> activeAmbu = new ArrayList<>();
+//                        if (doc.get("Route") != null){
+//                            activeAmbu.add(doc.getId());
+//                        }
+//                    }
+//                }
+//            });
+//
+//            for(final String a: activeAmbu){
+//                db.collection("AmbulanceSide").document(a).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+//                    @Override
+//                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+//                        Ambulance ambulance = documentSnapshot.toObject(Ambulance.class);
+//
+//                        float[] distance = new float[1];
+//                        Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(),
+//                                ambulance.getLocation().getLatitude()/1E6, ambulance.getLocation().getLatitude()/1E6,distance);
+//
+//
+//
+//                        if(distance[0] < 1200){
+//                            LatLng origin = new LatLng(ambulance.getLocation().getLatitude()/1E6, ambulance.getLocation().getLongitude()/1E6);
+//                            try{
+//                                LatLng dest = new LatLng(ambulance.getDestination().getLatitude()/1E6, ambulance.getDestination().getLongitude()/1E6);
+//                                String url = getUrl(origin, dest);
+//                                Log.d("onMapClick", url.toString());
+//                                FetchUrl FetchUrl = new FetchUrl();
+//
+//                                // Start downloading json data from Google Directions API
+//                                FetchUrl.execute(url);
+//
+//                                if(distance[0] <800)
+//                                frontEnd.showAlert(LEVEL_1);
+//
+//                                else
+//                                    frontEnd.showAlert(LEVEL_2);
+//
+//
+////                                        allpolylines.get(1).remove();
+//
+//
+//                            }catch (IndexOutOfBoundsException e){
+//
+//                            }
+//
+//
+//                        }
+//
+//
+//
+//
+//                    }
+//                });
+//            }
 
 
 
     }};
 
-    private class Ambulance{
-        private String id;
-        private String email;
-        private GeoPoint Location;
-        private GeoPoint Destination;
-        private Array route;
-
-        private Ambulance() {}
-
-        private Ambulance(String id, String email, GeoPoint Location, GeoPoint Destination ,Array route){
-            this.id = id;
-            this.email = email;
-            this.Location = Location;
-            this.route = route;
-            this.Destination = Destination;
-
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public void setId(String id) {
-            this.id = id;
-        }
-
-        public String getEmail() {
-            return email;
-        }
-
-        public void setEmail(String email) {
-            this.email = email;
-        }
-
-        public GeoPoint getLocation() {
-            return Location;
-        }
-
-        public void setLocation(GeoPoint location) {
-            Location = location;
-        }
-
-        public Array getRoute() {
-            return route;
-        }
-
-        public void setRoute(Array route) {
-            this.route = route;
-        }
-
-        public GeoPoint getDestination() {
-            return Destination;
-        }
-
-        public void setDestination(GeoPoint destination) {
-            this.Destination = destination;
-        }
-    }
+//    private class Ambulance{
+//        private String id;
+//        private String email;
+//        private GeoPoint Location;
+//        private GeoPoint Destination;
+//        private Array route;
+//
+//        private Ambulance() {}
+//
+//        private Ambulance(String id, String email, GeoPoint Location, GeoPoint Destination ,Array route){
+//            this.id = id;
+//            this.email = email;
+//            this.Location = Location;
+//            this.route = route;
+//            this.Destination = Destination;
+//
+//        }
+//
+//        public String getId() {
+//            return id;
+//        }
+//
+//        public void setId(String id) {
+//            this.id = id;
+//        }
+//
+//        public String getEmail() {
+//            return email;
+//        }
+//
+//        public void setEmail(String email) {
+//            this.email = email;
+//        }
+//
+//        public GeoPoint getLocation() {
+//            return Location;
+//        }
+//
+//        public void setLocation(GeoPoint location) {
+//            Location = location;
+//        }
+//
+//        public Array getRoute() {
+//            return route;
+//        }
+//
+//        public void setRoute(Array route) {
+//            this.route = route;
+//        }
+//
+//        public GeoPoint getDestination() {
+//            return Destination;
+//        }
+//
+//        public void setDestination(GeoPoint destination) {
+//            this.Destination = destination;
+//        }
+//    }
 
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;  // i actually don't know what is this for
     private void checkLocationPermission() {
@@ -431,6 +438,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onDestroy() {
         Log.i(TAG, "onDestroy");
         super.onDestroy();
+
+        backend.stop();
     }
 
 
@@ -440,191 +449,191 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     /**
      * A class to parse the Google Places in JSON format
      */
-    private class ParserTask extends AsyncTask<String, Integer, List<List<HashMap<String, String>>>> {
-
-        // Parsing the data in non-ui thread
-        @Override
-        protected List<List<HashMap<String, String>>> doInBackground(String... jsonData) {
-
-            JSONObject jObject;
-            List<List<HashMap<String, String>>> routes = null;
-
-            try {
-                jObject = new JSONObject(jsonData[0]);
-                Log.d("ParserTask",jsonData[0].toString());
-                DataParser parser = new DataParser();
-                Log.d("ParserTask", parser.toString());
-
-                // Starts parsing data
-                routes = parser.parse(jObject);
-                Log.d("ParserTask","Executing routes");
-                Log.d("ParserTask",routes.toString());
-
-            } catch (Exception e) {
-                Log.d("ParserTask",e.toString());
-                e.printStackTrace();
-            }
-            return routes;
-        }
-
-        // Executes in UI thread, after the parsing process
-        @Override
-        protected void onPostExecute(List<List<HashMap<String, String>>> result) {
-            ArrayList<LatLng> points;
-
-
-
-            // Traversing through all the routes
-            for (int i = 0; i < result.size(); i++) {
-                points = new ArrayList<>();
-                lineOptions = new PolylineOptions();
-
-                // Fetching i-th route
-                List<HashMap<String, String>> path = result.get(i);
-
-                // Fetching all the points in i-th route
-                for (int j = 0; j < path.size(); j++) {
-                    HashMap<String, String> point = path.get(j);
-
-                    double lat = Double.parseDouble(point.get("lat"));
-                    double lng = Double.parseDouble(point.get("lng"));
-                    LatLng position = new LatLng(lat, lng);
-
-                    points.add(position);
-                }
-
-                //Adding all the points in the route to LineOptions
-                lineOptions.addAll(points);
-                lineOptions.width(20);
-                lineOptions.color(Color.BLUE);
-                lineOptions.jointType(DEFAULT);
-
-                Log.d("onPostExecute","onPostExecute lineoptions decoded");
-
-            }
-
-            // Drawing polyline in the Google Map for the i-th route
-            if(lineOptions != null) {
-                polylineFinal = mMap.addPolyline(lineOptions);
-                if(allpolylines.size() > 1 ){
-                    for ( Polyline l: allpolylines){
-                        l.remove();
-                    }
-                }
-                allpolylines.add(polylineFinal);
-                Log.i("POLY", "Size: " + allpolylines.size());
-            }
-            else {
-                Log.d("onPostExecute","without Polylines drawn");
-            }
-        }
-    }
-
-    private String getUrl(LatLng origin, LatLng dest) {
-
-        // Origin of route
-        String str_origin = "origin=" + origin.latitude + "," + origin.longitude;
-
-        // Destination of route
-        String str_dest = "destination=" + dest.latitude + "," + dest.longitude;
-
-
-        // Sensor enabled
-        String sensor = "sensor=false";
-
-        String key = "key=AIzaSyDmN5MP07wzzwDBrBXeDbSlmWuNpB_l1lw";
-
-
-        // Building the parameters to the web service
-        String parameters = str_origin + "&" + str_dest + "&" + sensor + "&" + key;
-
-
-        // Output format
-        String output = "json";
-
-        // Building the url to the web service
-        String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
-
-
-        return url;
-    }
-
-    /**
-     * A method to download json data from url
-     */
-    private String downloadUrl(String strUrl) throws IOException {
-        String data = "";
-        InputStream iStream = null;
-        HttpURLConnection urlConnection = null;
-        try {
-            URL url = new URL(strUrl);
-
-            // Creating an http connection to communicate with url
-            urlConnection = (HttpURLConnection) url.openConnection();
-
-            // Connecting to url
-            urlConnection.connect();
-
-            // Reading data from url
-            iStream = urlConnection.getInputStream();
-
-            BufferedReader br = new BufferedReader(new InputStreamReader(iStream));
-
-            StringBuffer sb = new StringBuffer();
-
-            String line = "";
-            while ((line = br.readLine()) != null) {
-                sb.append(line);
-            }
-
-            data = sb.toString();
-            Log.d("downloadUrl", data.toString());
-            br.close();
-
-        } catch (Exception e) {
-            Log.d("Exception", e.toString());
-        } finally {
-            iStream.close();
-            urlConnection.disconnect();
-        }
-        return data;
-    }
-
-    public GoogleMap getMap() {
-
-        return mMap;
-    }
-
-    // Fetches data from url passed
-    private class FetchUrl extends AsyncTask<String, Void, String> {
-
-        @Override
-        protected String doInBackground(String... url) {
-
-            // For storing data from web service
-            String data = "";
-
-            try {
-                // Fetching the data from web service
-                data = downloadUrl(url[0]);
-                Log.d("Background Task data", data.toString());
-            } catch (Exception e) {
-                Log.d("Background Task", e.toString());
-            }
-            return data;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-
-            ParserTask parserTask = new ParserTask();
-
-            // Invokes the thread for parsing the JSON data
-            parserTask.execute(result);
-
-        }
-    }
+//    private class ParserTask extends AsyncTask<String, Integer, List<List<HashMap<String, String>>>> {
+//
+//        // Parsing the data in non-ui thread
+//        @Override
+//        protected List<List<HashMap<String, String>>> doInBackground(String... jsonData) {
+//
+//            JSONObject jObject;
+//            List<List<HashMap<String, String>>> routes = null;
+//
+//            try {
+//                jObject = new JSONObject(jsonData[0]);
+//                Log.d("ParserTask",jsonData[0].toString());
+//                DataParser parser = new DataParser();
+//                Log.d("ParserTask", parser.toString());
+//
+//                // Starts parsing data
+//                routes = parser.parse(jObject);
+//                Log.d("ParserTask","Executing routes");
+//                Log.d("ParserTask",routes.toString());
+//
+//            } catch (Exception e) {
+//                Log.d("ParserTask",e.toString());
+//                e.printStackTrace();
+//            }
+//            return routes;
+//        }
+//
+//        // Executes in UI thread, after the parsing process
+//        @Override
+//        protected void onPostExecute(List<List<HashMap<String, String>>> result) {
+//            ArrayList<LatLng> points;
+//
+//
+//
+//            // Traversing through all the routes
+//            for (int i = 0; i < result.size(); i++) {
+//                points = new ArrayList<>();
+//                lineOptions = new PolylineOptions();
+//
+//                // Fetching i-th route
+//                List<HashMap<String, String>> path = result.get(i);
+//
+//                // Fetching all the points in i-th route
+//                for (int j = 0; j < path.size(); j++) {
+//                    HashMap<String, String> point = path.get(j);
+//
+//                    double lat = Double.parseDouble(point.get("lat"));
+//                    double lng = Double.parseDouble(point.get("lng"));
+//                    LatLng position = new LatLng(lat, lng);
+//
+//                    points.add(position);
+//                }
+//
+//                //Adding all the points in the route to LineOptions
+//                lineOptions.addAll(points);
+//                lineOptions.width(20);
+//                lineOptions.color(Color.BLUE);
+//                lineOptions.jointType(DEFAULT);
+//
+//                Log.d("onPostExecute","onPostExecute lineoptions decoded");
+//
+//            }
+//
+//            // Drawing polyline in the Google Map for the i-th route
+//            if(lineOptions != null) {
+//                polylineFinal = mMap.addPolyline(lineOptions);
+//                if(allpolylines.size() > 1 ){
+//                    for ( Polyline l: allpolylines){
+//                        l.remove();
+//                    }
+//                }
+//                allpolylines.add(polylineFinal);
+//                Log.i("POLY", "Size: " + allpolylines.size());
+//            }
+//            else {
+//                Log.d("onPostExecute","without Polylines drawn");
+//            }
+//        }
+//    }
+//
+//    private String getUrl(LatLng origin, LatLng dest) {
+//
+//        // Origin of route
+//        String str_origin = "origin=" + origin.latitude + "," + origin.longitude;
+//
+//        // Destination of route
+//        String str_dest = "destination=" + dest.latitude + "," + dest.longitude;
+//
+//
+//        // Sensor enabled
+//        String sensor = "sensor=false";
+//
+//        String key = "key=AIzaSyDmN5MP07wzzwDBrBXeDbSlmWuNpB_l1lw";
+//
+//
+//        // Building the parameters to the web service
+//        String parameters = str_origin + "&" + str_dest + "&" + sensor + "&" + key;
+//
+//
+//        // Output format
+//        String output = "json";
+//
+//        // Building the url to the web service
+//        String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
+//
+//
+//        return url;
+//    }
+//
+//    /**
+//     * A method to download json data from url
+//     */
+//    private String downloadUrl(String strUrl) throws IOException {
+//        String data = "";
+//        InputStream iStream = null;
+//        HttpURLConnection urlConnection = null;
+//        try {
+//            URL url = new URL(strUrl);
+//
+//            // Creating an http connection to communicate with url
+//            urlConnection = (HttpURLConnection) url.openConnection();
+//
+//            // Connecting to url
+//            urlConnection.connect();
+//
+//            // Reading data from url
+//            iStream = urlConnection.getInputStream();
+//
+//            BufferedReader br = new BufferedReader(new InputStreamReader(iStream));
+//
+//            StringBuffer sb = new StringBuffer();
+//
+//            String line = "";
+//            while ((line = br.readLine()) != null) {
+//                sb.append(line);
+//            }
+//
+//            data = sb.toString();
+//            Log.d("downloadUrl", data.toString());
+//            br.close();
+//
+//        } catch (Exception e) {
+//            Log.d("Exception", e.toString());
+//        } finally {
+//            iStream.close();
+//            urlConnection.disconnect();
+//        }
+//        return data;
+//    }
+//
+//    public GoogleMap getMap() {
+//
+//        return mMap;
+//    }
+//
+//    // Fetches data from url passed
+//    private class FetchUrl extends AsyncTask<String, Void, String> {
+//
+//        @Override
+//        protected String doInBackground(String... url) {
+//
+//            // For storing data from web service
+//            String data = "";
+//
+//            try {
+//                // Fetching the data from web service
+//                data = downloadUrl(url[0]);
+//                Log.d("Background Task data", data.toString());
+//            } catch (Exception e) {
+//                Log.d("Background Task", e.toString());
+//            }
+//            return data;
+//        }
+//
+//        @Override
+//        protected void onPostExecute(String result) {
+//            super.onPostExecute(result);
+//
+//            ParserTask parserTask = new ParserTask();
+//
+//            // Invokes the thread for parsing the JSON data
+//            parserTask.execute(result);
+//
+//        }
+//    }
 
 }
 

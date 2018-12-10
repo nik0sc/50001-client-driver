@@ -27,10 +27,14 @@ import static android.location.Location.distanceBetween;
 
 public class FrontendImpl implements FrontEnd {
 
+    public FrontendImpl(){
+
+    }
+
     private ArrayList<Marker> markerlist = new ArrayList<Marker>();
     private ArrayList<Polyline> polylinelist = new ArrayList<Polyline>();
 
-    private Context mContext = App.getContext();
+    private Context mContext = MyApplication.getAppContext();
     private GoogleMap mMap = MapsActivity.mMap;
 
     public void showAlert(AlertType alert){

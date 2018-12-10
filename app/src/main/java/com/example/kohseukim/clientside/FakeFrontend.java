@@ -26,8 +26,7 @@ public class FakeFrontend implements FrontEnd {
     }
 
     @Override
-    public void dropAlert(AlertType type) {
-        Log.i(TAG, "dropAlert: type: " + type);
+    public void dropAlert() {
         currentAlert = null;
     }
 

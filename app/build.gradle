@@ -18,13 +18,6 @@ android {
         }
     }
 
-    sourceSets {
-        main {
-            java {
-                exclude "com/example/kohseukim/clientside/FrontendImpl.java"
-            }
-        }
-    }
 }
 
 dependencies {
@@ -39,7 +32,11 @@ dependencies {
     implementation 'com.google.android.gms:play-services-maps:16.0.0'
     implementation 'com.google.android.gms:play-services-location:16.0.0'
     implementation 'com.google.firebase:firebase-firestore:17.1.2'
-    compile 'com.android.support:multidex:1.0.3'
+    implementation 'com.android.support:multidex:1.0.3'
+    implementation 'com.google.firebase:firebase-core:16.0.6'
+    implementation 'com.google.firebase:firebase-firestore:17.1.3'
+    implementation 'com.google.firebase:firebase-auth:16.0.5'
+    implementation 'com.google.firebase:firebase-database:16.0.5'
 
 
 }
