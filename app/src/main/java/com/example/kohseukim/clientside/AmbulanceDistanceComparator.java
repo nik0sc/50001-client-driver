@@ -13,7 +13,7 @@ import java.util.Map;
  * Comparator doesn't check for null pointers: NPE is your problem
  */
 public class AmbulanceDistanceComparator implements Comparator<Map.Entry<String,Ambulance>> {
-    // No public accessors - otherwise the correct ordering could change while the sort or queue
+    // No public setters - otherwise the correct ordering could change while the sort or queue
     // uses the old ordering. Simpler to just create a new comparator every time
     private GeoPoint currentLocation;
 
