@@ -2,6 +2,7 @@ package com.example.kohseukim.clientside;
 
 import android.content.Context;
 import android.location.Location;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -10,6 +11,7 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.*;
 
@@ -71,7 +73,7 @@ public class BackendImpl implements BackEnd {
     private LocationCallback locationCallback = null;
 
     // Most recent location
-    private Location mostRecentLocation = null;
+    private Location mostRecentLocation;
 
     // Last recalculation
     private long lastRecalculation = 0;
@@ -121,6 +123,13 @@ public class BackendImpl implements BackEnd {
                     Log.d(TAG, "start: Driver published, id: " + fbDriver.getId());
                 }
             }
+        ).addOnFailureListener(
+                new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e(TAG, "start: Can't publish driver!");
+                    }
+                }
         );
 
         // Ambulance listener
@@ -354,7 +363,12 @@ public class BackendImpl implements BackEnd {
             driver.setAlertLevel(alertType.toString());
             driver.setInRadiusOf(fbActiveAmbulance);
 
-            fbDriver.set(driver);
+            if (fbDriver != null) {
+                Log.d(TAG, "recalculateAndDisplay: Updating fbDriver on firestore");
+                fbDriver.set(driver);
+            } else {
+                Log.w(TAG, "recalculateAndDisplay: Not updating fbDriver, is null");
+            }
         } else {
             frontEnd.dropAmbulance();
             frontEnd.dropRoute();
@@ -368,8 +382,12 @@ public class BackendImpl implements BackEnd {
             driver.setInRadiusOf(fbActiveAmbulance);
             driver.setAlertResponded(false);
 
-            fbDriver.set(driver);
-
+            if (fbDriver != null) {
+                Log.d(TAG, "recalculateAndDisplay: Updating fbDriver on firestore");
+                fbDriver.set(driver);
+            } else {
+                Log.w(TAG, "recalculateAndDisplay: Not updating fbDriver, is null");
+            }
         }
 
         // Update the last recalculation
