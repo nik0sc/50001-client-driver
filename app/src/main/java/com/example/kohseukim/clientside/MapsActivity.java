@@ -3,21 +3,14 @@ package com.example.kohseukim.clientside;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.location.Location;
-import android.media.MediaPlayer;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Looper;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -32,37 +25,12 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
-import com.google.firebase.firestore.GeoPoint;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
 
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.reflect.Array;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-
-import javax.annotation.Nullable;
-
-import static com.example.kohseukim.clientside.FrontEnd.AlertType.LEVEL_1;
-import static com.example.kohseukim.clientside.FrontEnd.AlertType.LEVEL_2;
-import static com.google.android.gms.maps.model.JointType.DEFAULT;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -203,8 +171,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
         // Must be global for leveloneactivity to acknowledge alert
-        App.backend = new BackendImpl(new FrontendImpl(mMap), getApplicationContext());
-        App.backend.start("hi");
+        MyApplication.backend = new BackendImpl(new FrontendImpl(mMap), getApplicationContext());
+        MyApplication.backend.start("hi");
 
 
     }
@@ -438,7 +406,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     protected void onStop() {
-        App.backend.stop();
+        MyApplication.backend.stop();
         Log.i(TAG, "onStop");
         super.onStop();
     }

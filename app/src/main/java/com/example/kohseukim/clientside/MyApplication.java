@@ -5,6 +5,7 @@ import android.content.Context;
 
 public class MyApplication extends Application {
 
+    public static BackEnd backend;
     private static Context context;
 
     public void onCreate() {

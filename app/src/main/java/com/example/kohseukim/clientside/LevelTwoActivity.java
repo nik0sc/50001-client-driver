@@ -3,7 +3,6 @@ package com.example.kohseukim.clientside;
 import android.app.Activity;
 import android.content.Intent;
 import android.support.constraint.ConstraintLayout;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -48,10 +47,10 @@ public class LevelTwoActivity extends Activity {
             public void onClick(View v) {
                 Log.d(TAG, "onClick: Enter onClick handler");
 
-                if (App.backend == null) {
-                    Log.e(TAG, "onClick: App.backend is null, has it been initialized?");
+                if (MyApplication.backend == null) {
+                    Log.e(TAG, "onClick: MyApplication.backend is null, has it been initialized?");
                 } else {
-                    App.backend.acknowledgeAlert();
+                    MyApplication.backend.acknowledgeAlert();
                 }
                 Intent i = new Intent(LevelTwoActivity.this, MapsActivity.class);
                 finish();
